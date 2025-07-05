@@ -1904,9 +1904,10 @@ do
 		return setmetatable(window, library)
 	end
     --
-    function library:Page(info)
-        local info = info or {}
-        local name = info.name or info.Name or info.title or info.Title or "New Page"
+function library:Page(info)
+    local info = info or {}
+    local name = info.name or info.Name or info.title or info.Title or "New Page"
+end
         --
         local window = self
         --
