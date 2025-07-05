@@ -1019,7 +1019,6 @@ do
                 MaxColor.B + (MinColor.B - MaxColor.B) * Value
             )
         end
-        -- // Esp Preview
         do
             window.VisualPreview = {
                 Size = {X = 5, Y = 0},
