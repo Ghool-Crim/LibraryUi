@@ -6743,3 +6743,5 @@ uis.InputBegan:Connect(function(input, gpe)
         toggleUI()
     end
 end)
+
+return library
