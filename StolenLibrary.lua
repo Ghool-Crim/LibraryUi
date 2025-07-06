@@ -173,9 +173,21 @@ do
             quad.Filled = false
             quad.Transparency = library.shared.initialized and 1 or 0
             instance = quad
-        elseif instanceType == "Line" or instanceType == "line" then
+    elseif instanceType == "Line" or instanceType == "line" then
+        local line = Drawing.new("Line")
+        line.Visible = true
+        line.From = Vector2.new(0, 0)
+        line.To = Vector2.new(0, 0)
+        line.Color = Color3.fromRGB(255, 255, 255)
+        line.Thickness = 1
+        line.ZIndex = 50
+        line.Transparency = library.shared.initialized and 1 or 0
+        instance = line
+    end
 
+    return instance
 end
+
 -- // Library Functions
 do
     library.__index = library
