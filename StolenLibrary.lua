@@ -174,251 +174,7 @@ do
             quad.Transparency = library.shared.initialized and 1 or 0
             instance = quad
         elseif instanceType == "Line" or instanceType == "line" then
-            local line = Drawing.new("Line")
-            line.Visible = false
-            line.Color = Color3.fromRGB(255, 255, 255)
-            line.Thickness = 1.5
-            line.Transparency = 1
-            line.Thickness = 1.5
-            line.ZIndex = 50
-            line.Transparency = library.shared.initialized and 1 or 0
-            instance = line
-        end
-        --
-        if instance then
-            for i, v in pairs(instanceProperties) do
-                if i == "Hidden" or i == "hidden" then
-                    instanceHidden = true
-                else
-                    if library.shared.initialized then
-                        instance[i] = v
-                    else
-                        if instanceProperties.Hidden or instanceProperties.hidden then
-                            instance[i] = v
-                        else
-                            if i ~= "Transparency" then
-                                instance[i] = v
-                            end
-                        end
-                    end
-                end
-            end
-            --
-            if not instanceHidden then
-                library.drawings[#library.drawings + 1] = {instance, instanceOffset, instanceProperties["Transparency"] or 1}
-            else
-                library.hidden[#library.hidden + 1] = {instance}
-            end
-            --
-            if instanceParent then
-                instanceParent[#instanceParent + 1] = instance
-            end
-            --
-            return instance
-        end
-	end
-    --
-    function utility:Instance(InstanceType, InstanceProperties)
-        local Object = Instance.new(InstanceType)
-        --
-        for Index, Value in pairs(InstanceProperties) do
-            Object[Index] = Value
-        end
-        --
-        library.objects[Object] = true
-        --
-        return Object
-    end
-    --
-    function utility:RemoveInstance(Object)
-        library.objects[Object] = nil
-        Object:Remove()
-    end
-    --
-    function utility:UpdateOffset(instance, instanceOffset)
-        for i,v in pairs(library.drawings) do
-            if v[1] == instance then
-                v[2] = instanceOffset
-            end
-        end
-    end
-    --
-    function utility:UpdateTransparency(instance, instanceTransparency)
-        for i,v in pairs(library.drawings) do
-            if v[1] == instance then
-                v[3] = instanceTransparency
-            end
-        end
-    end
-    --
-    function utility:Remove(instance, hidden)
-        library.colors[instance] = nil
-        --
-        local ind = 0
-        --
-        for i,v in pairs(hidden and library.hidden or library.drawings) do
-            if v[1] == instance then
-                ind = i
-                if hidden then
-                    v[1] = nil
-                else
-                    v[2] = nil
-                    v[1] = nil
-                end
-            end
-        end
-        --
-        Remove(hidden and library.hidden or library.drawings, ind)
-        instance:Remove()
-    end
-    --
-    function utility:GetSubPrefix(str)
-        local str = tostring(str):gsub(" ","")
-        local var = ""
-        --
-        if #str == 2 then
-            local sec = string.sub(str,#str,#str+1)
-            var = sec == "1" and "st" or sec == "2" and "nd" or sec == "3" and "rd" or "th"
-        end
-        --
-        return var
-    end
-    --
-    function utility:Connection(connectionType, connectionCallback)
-        local connection = connectionType:Connect(connectionCallback)
-        library.connections[#library.connections + 1] = connection
-        --
-        return connection
-    end
-    --
-    function utility:Disconnect(connection)
-        for i,v in pairs(library.connections) do
-            if v == connection then
-                library.connections[i] = nil
-                v:Disconnect()
-            end
-        end
-    end
-    --
-    function utility:MouseLocation()
-        return uis:GetMouseLocation()
-    end
-    --
-    function utility:MouseOverDrawing(values, valuesAdd)
-        local valuesAdd = valuesAdd or {}
-        local values = {
-            (values[1] or 0) + (valuesAdd[1] or 0),
-            (values[2] or 0) + (valuesAdd[2] or 0),
-            (values[3] or 0) + (valuesAdd[3] or 0),
-            (values[4] or 0) + (valuesAdd[4] or 0)
-        }
-        --
-        local mouseLocation = utility:MouseLocation()
-	    return (mouseLocation.x >= values[1] and mouseLocation.x <= (values[1] + (values[3] - values[1]))) and (mouseLocation.y >= values[2] and mouseLocation.y <= (values[2] + (values[4] - values[2])))
-    end
-    --
-    function utility:GetTextBounds(text, textSize, font)
-        local textbounds = Vector2.new(0, 0)
-        --
-        local textlabel = utility:Create("TextLabel", {Vector2.new(0, 0)}, {
-            Text = text,
-            Size = textSize,
-            Font = font,
-            Hidden = true
-        })
-        --
-        textbounds = textlabel.TextBounds
-        utility:Remove(textlabel, true)
-        --
-        return textbounds
-    end
-    --
-    function utility:GetScreenSize()
-        return ws.CurrentCamera.ViewportSize
-    end
-    --
-    function utility:LoadImage(instance, imageName, imageLink)
-        local data
-        --
-        if isfile(library.folders.assets.."/"..imageName..".png") then
-            data = readfile(library.folders.assets.."/"..imageName..".png")
-        else
-            if imageLink then
-                data = game:HttpGet(imageLink)
-                writefile(library.folders.assets.."/"..imageName..".png", data)
-            else
-                return
-            end
-        end
-        --
-        if data and instance then
-            instance.Data = data
-        end
-    end
-    --
-    function utility:Lerp(instance, instanceTo, instanceTime)
-        local currentTime = 0
-        local currentIndex = {}
-        local connection
-        --
-        for i,v in pairs(instanceTo) do
-            currentIndex[i] = instance[i]
-        end
-        --
-        local function lerp()
-            for i,v in pairs(instanceTo) do
-                instance[i] = ((v - currentIndex[i]) * currentTime / instanceTime) + currentIndex[i]
-            end
-        end
-        --
-        connection = utility:Connection(rs.RenderStepped, function(delta)
-            if currentTime < instanceTime then
-                currentTime = currentTime + delta
-                lerp()
-            else
-                connection:Disconnect()
-            end
-        end)
-    end
-    --
-    function utility:Combine(table1, table2)
-        local table3 = {}
-        for i,v in pairs(table1) do table3[i] = v end
-        local t = #table3
-        for z,x in pairs(table2) do table3[z + t] = x end
-        return table3
-    end
-    --
-    function utility:WrapText(Text, Size)
-        local Max = (Size / 7)
-        --
-        return Text:sub(0, Max)
-    end
-    --
-    function utility:InputToString(Input)
-        if Input then
-            local String = (tostring(Input) .. "."):gsub("%.", ",")
-            local Count = 0
-            --
-            for Value in String:gmatch("(.-),") do
-                Count = Count + 1
-                --
-                if Count == 3 then
-                    String = Value:gsub("Keypad", "")
-                end
-            end
-            --
-            if String == "Unknown" or Input.Value == 27 then
-                return "None"
-            elseif utility.Keyboard.InputNames[String] then
-                String = utility.Keyboard.InputNames[String]
-            end
-            --
-            return String
-        else
-            return "None"
-        end
-    end
+
 end
 -- // Library Functions
 do
@@ -693,6 +449,44 @@ do
             uis.MouseIconEnabled = true
         end
         --
+        function window:Cursor(info)
+            window.cursor = {}
+            --
+            local cursor = utility:Create("Triangle", nil, {
+                Color = theme.cursoroutline,
+                Thickness = 2.5,
+                Filled = false,
+                ZIndex = 65,
+                Hidden = true
+            });window.cursor["cursor"] = cursor
+            --
+            library.colors[cursor] = {
+                Color = "cursoroutline"
+            }
+            --
+            local cursor_inline = utility:Create("Triangle", nil, {
+                Color = theme.accent,
+                Filled = true,
+                Thickness = 0,
+                ZIndex = 65,
+                Hidden = true
+            });window.cursor["cursor_inline"] = cursor_inline
+            --
+            library.colors[cursor_inline] = {
+                Color = "accent"
+            }
+            --
+            utility:Connection(rs.RenderStepped, function()
+                local mouseLocation = utility:MouseLocation()
+                --
+                cursor.PointA = Vector2.new(mouseLocation.X, mouseLocation.Y)
+                cursor.PointB = Vector2.new(mouseLocation.X + 12, mouseLocation.Y + 4)
+                cursor.PointC = Vector2.new(mouseLocation.X + 4, mouseLocation.Y + 12)
+                --
+                cursor_inline.PointA = Vector2.new(mouseLocation.X, mouseLocation.Y)
+                cursor_inline.PointB = Vector2.new(mouseLocation.X + 12, mouseLocation.Y + 4)
+                cursor_inline.PointC = Vector2.new(mouseLocation.X + 4, mouseLocation.Y + 12)
+            end)
             --
             uis.MouseIconEnabled = false
             --
@@ -981,6 +775,7 @@ do
                 MaxColor.B + (MinColor.B - MaxColor.B) * Value
             )
         end
+        -- // Esp Preview
         do
             window.VisualPreview = {
                 Size = {X = 5, Y = 0},
@@ -1241,135 +1036,7 @@ do
                     esppreview_visiblebutton.Text = window.VisualPreview.Visible and "O" or "0"
                 end
             end
-            --
-            do -- Preview Stuff
-                local preview_boxoutline = utility:Create("Frame", {Vector2.new(esppreview_frame_previewbox.Size.X - BoxSize.X - 1, 20), esppreview_frame_previewbox}, {
-                    Size = BoxSize,
-                    Position = utility:Position(1, -(BoxSize.X - 1), 0, 20, esppreview_frame_previewbox),
-                    Color = Color3.fromRGB(0, 0, 0),
-                    Filled = false,
-                    Thickness = 2.5
-                }, window.VisualPreview.Drawings);boxoutline = preview_boxoutline
-                --
-                local preview_box = utility:Create("Frame", {Vector2.new(0, 0), preview_boxoutline}, {
-                    Size = utility:Size(1, 0, 1, 0, preview_boxoutline),
-                    Position = utility:Position(0, 0, 0, 0, preview_boxoutline),
-                    Color = Color3.fromRGB(255, 255, 255),
-                    Filled = false,
-                    Thickness = 0.6
-                }, window.VisualPreview.Drawings)
-                --
-                local preview_heatlhbaroutline = utility:Create("Frame", {Vector2.new(-6, -1), preview_boxoutline}, {
-                    Size = utility:Size(0, 4, 1, 2, preview_boxoutline),
-                    Position = utility:Position(0, -6, 0, -1, preview_boxoutline),
-                    Color = Color3.fromRGB(0, 0, 0),
-                    Filled = true
-                }, window.VisualPreview.Drawings);healthbaroutline = preview_heatlhbaroutline
-                --
-                local preview_heatlhbar = utility:Create("Frame", {Vector2.new(1, 1), preview_heatlhbaroutline}, {
-                    Size = utility:Size(1, -2, 1, -2, preview_heatlhbaroutline),
-                    Position = utility:Position(0, 1, 0, 1, preview_heatlhbaroutline),
-                    Color = Color3.fromRGB(255, 0, 0),
-                    Filled = true
-                }, window.VisualPreview.Drawings);healthbar = preview_heatlhbar
-                --
-                local preview_title = utility:Create("TextLabel", {Vector2.new(preview_box.Size.X / 2, -20), preview_box}, {
-                    Text = "Username",
-                    Size = theme.textsize,
-                    Font = theme.font,
-                    Color = theme.textcolor,
-                    OutlineColor = theme.textborder,
-                    Center = true,
-                    Position = utility:Position(0.5, 0, 0, -20, preview_box)
-                }, window.VisualPreview.Drawings)
-                --
-                local preview_distance = utility:Create("TextLabel", {Vector2.new(preview_box.Size.X / 2, preview_box.Size.Y + 5), preview_box}, {
-                    Text = "25m",
-                    Size = theme.textsize,
-                    Font = theme.font,
-                    Color = theme.textcolor,
-                    OutlineColor = theme.textborder,
-                    Center = true,
-                    Position = utility:Position(0.5, 0, 1, 5, preview_box)
-                }, window.VisualPreview.Drawings)
-                --
-                local preview_tool = utility:Create("TextLabel", {Vector2.new(preview_box.Size.X / 2, preview_box.Size.Y + 20), preview_box}, {
-                    Text = "Weapon",
-                    Size = theme.textsize,
-                    Font = theme.font,
-                    Color = theme.textcolor,
-                    OutlineColor = theme.textborder,
-                    Center = true,
-                    Position = utility:Position(0.5, 0, 1, 20, preview_box)
-                }, window.VisualPreview.Drawings)
-                --
-                local preview_character = utility:Create("Frame", {Vector2.new(46/2, 40/2), preview_box}, {
-                    Size = utility:Size(1, -46, 1, -40, preview_box),
-                    Position = utility:Position(0, (46/2), 0, (40/2), preview_box),
-                    Color = Color3.fromRGB(255, 255, 255),
-                    Transparency = 0
-                }, window.VisualPreview.Drawings)
-                --
-                do -- Chams
-                    for Index = 1, 2 do
-                        local transparency = Index == 1 and 0.75 or 0.5
-                        local color = Index == 1 and Color3.fromRGB(93, 62, 152) or Color3.fromRGB(255, 255, 255)
-                        --
-                        local extrasize = Index == 1 and 4 or 0
-                        local extraoffset = Index == 1 and -2 or 0
-                        --
-                        local preview_character_head = utility:Create("Frame", {Vector2.new((preview_character.Size.X * 0.35) + (extraoffset), extraoffset), preview_character}, {
-                            Size = utility:Size(0.3, extrasize, 0.2, 0, preview_character),
-                            Position = utility:Position(0.35, extraoffset, 0, extraoffset, preview_character),
-                            Color = color,
-                            Transparency = transparency
-                        }, window.VisualPreview.Drawings)
-                        --
-                        local preview_character_torso = utility:Create("Frame", {Vector2.new((preview_character.Size.X * 0.25) + (extraoffset), (preview_character.Size.Y * 0.2) + (extraoffset)), preview_character}, {
-                            Size = utility:Size(0.5, extrasize, 0.4, extrasize, preview_character),
-                            Position = utility:Position(0.25, extraoffset, 0.2, extraoffset, preview_character),
-                            Color = color,
-                            Transparency = transparency
-                        }, window.VisualPreview.Drawings)
-                        --
-                        local preview_character_leftarm = utility:Create("Frame", {Vector2.new(extraoffset, (preview_character.Size.Y * 0.2) + (extraoffset)), preview_character}, {
-                            Size = utility:Size(0.25, 0, 0.4, extrasize, preview_character),
-                            Position = utility:Position(0, extraoffset, 0.2, extraoffset, preview_character),
-                            Color = color,
-                            Transparency = transparency
-                        }, window.VisualPreview.Drawings)
-                        --
-                        local preview_character_rightarm = utility:Create("Frame", {Vector2.new((preview_character.Size.X * 0.75) + (extraoffset + extrasize), (preview_character.Size.Y * 0.2) + (extraoffset)), preview_character}, {
-                            Size = utility:Size(0.25, 0, 0.4, extrasize, preview_character),
-                            Position = utility:Position(0.75, extraoffset, 0.2, extraoffset, preview_character),
-                            Color = color,
-                            Transparency = transparency
-                        }, window.VisualPreview.Drawings)
-                        --
-                        local preview_character_leftleg = utility:Create("Frame", {Vector2.new((preview_character.Size.X * 0.25) + (extraoffset), (preview_character.Size.Y * 0.6) + (extraoffset + extrasize)), preview_character}, {
-                            Size = utility:Size(0.25, extrasize / 2, 0.4, 0, preview_character),
-                            Position = utility:Position(0.25, extraoffset, 0.6, extraoffset + extrasize, preview_character),
-                            Color = color,
-                            Transparency = transparency
-                        }, window.VisualPreview.Drawings)
-                        --
-                        local preview_character_rightleg = utility:Create("Frame", {Vector2.new((preview_character.Size.X * 0.5) + (extraoffset + (extrasize / 2)), (preview_character.Size.Y * 0.6) + (extraoffset + extrasize)), preview_character}, {
-                            Size = utility:Size(0.25, extrasize / 2, 0.4, 0, preview_character),
-                            Position = utility:Position(0.25, extraoffset, 0.6, extraoffset + extrasize, preview_character),
-                            Color = color,
-                            Transparency = transparency
-                        }, window.VisualPreview.Drawings)
-                        --
-                        window.VisualPreview.Components.Chams["Head"][Index] = preview_character_head
-                        window.VisualPreview.Components.Chams["Torso"][Index] = preview_character_torso
-                        window.VisualPreview.Components.Chams["LeftArm"][Index] = preview_character_leftarm
-                        window.VisualPreview.Components.Chams["RightArm"][Index] = preview_character_rightarm
-                        window.VisualPreview.Components.Chams["LeftLeg"][Index] = preview_character_leftleg
-                        window.VisualPreview.Components.Chams["RightLeg"][Index] = preview_character_rightleg
-                    end
-                end
-                --
-                do -- Skeleton
+            --                do -- Skeleton
                     for Index = 1, 2 do
                         local skeletonsize = Vector2.new(Index == 1 and 3 or 1, Index == 1 and -10 or -12)
                         local skeletonoffset = Vector2.new(Index == 1 and -1 or 0, Index == 1 and 5 or 6)
@@ -2240,6 +1907,44 @@ do
             end)
         end
         --
+        function window:Cursor(info)
+            window.cursor = {}
+            --
+            local cursor = utility:Create("Triangle", nil, {
+                Color = theme.cursoroutline,
+                Thickness = 2.5,
+                Filled = false,
+                ZIndex = 65,
+                Hidden = true
+            });window.cursor["cursor"] = cursor
+            --
+            library.colors[cursor] = {
+                Color = "cursoroutline"
+            }
+            --
+            local cursor_inline = utility:Create("Triangle", nil, {
+                Color = theme.accent,
+                Filled = true,
+                Thickness = 0,
+                ZIndex = 65,
+                Hidden = true
+            });window.cursor["cursor_inline"] = cursor_inline
+            --
+            library.colors[cursor_inline] = {
+                Color = "accent"
+            }
+            --
+            utility:Connection(rs.RenderStepped, function()
+                local mouseLocation = utility:MouseLocation()
+                --
+                cursor.PointA = Vector2.new(mouseLocation.X, mouseLocation.Y)
+                cursor.PointB = Vector2.new(mouseLocation.X + 12, mouseLocation.Y + 4)
+                cursor.PointC = Vector2.new(mouseLocation.X + 4, mouseLocation.Y + 12)
+                --
+                cursor_inline.PointA = Vector2.new(mouseLocation.X, mouseLocation.Y)
+                cursor_inline.PointB = Vector2.new(mouseLocation.X + 12, mouseLocation.Y + 4)
+                cursor_inline.PointC = Vector2.new(mouseLocation.X + 4, mouseLocation.Y + 12)
+            end)
             --
             uis.MouseIconEnabled = false
             --
